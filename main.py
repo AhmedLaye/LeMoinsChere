@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 import pandas
+tout_les_sites={
+    'jumia':'https://www.jumia.sn/',
+    'expatdakar':''
+}
 
 response = requests.get("https://www.jumia.sn/fashion-mode/")
 web=response.text
@@ -36,9 +40,25 @@ Tab_produits_jumia = pandas.DataFrame(
 # affichage
 print(Tab_produits_jumia)
 # creation d'un fichier excel
-Tab_produits_jumia.to_excel("data/data.xlsx", sheet_name="ProduitJumia", index=False)
 
 
+# ************************************ EXPAT ****************************************
 
+reponse_expat = requests.get("https://www.expat-dakar.com/mode-beaute")
+web_expat=reponse_expat.text
+soup_expat = BeautifulSoup(web_expat, "html.parser")
+produits_expats=soup_expat.find_all(name="div", class_="listing-card")
+# teste pour voir la disposition des balises
+# print(soup_expat.body.div.find_all(name="a", class_="listing-card__inner")[0])
+category_produit_expat=[soup_expat.body.find_all(name="a", class_="listing-card__inner")[i].get("data-t-listing_category_title") for i in range (len(produits_expats))]
+prix_produit_expat=[soup_expat.body.find_all(name="a", class_="listing-card__inner")[i].get("data-t-listing_price") for i in range (len(produits_expats))]
+nom_produit_expat=[soup_expat.body.find_all(name="a", class_="listing-card__inner")[i].get("data-t-listing_title") for i in range (len(produits_expats))]
+frame_expat=pandas.DataFrame({
+    'Nom':nom_produit_expat,
+     'Prix Produit':prix_produit_expat,
+     'Prix Promo':''
+    })
 
-
+with pandas.ExcelWriter('data/data.xlsx') as writer:
+    frame_expat.to_excel(writer, sheet_name="produit Expat")
+    Tab_produits_jumia.to_excel(writer, sheet_name="ProduitJumia", index=False)
